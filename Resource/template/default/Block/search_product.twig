@@ -1,0 +1,187 @@
+{#
+This file is part of EC-CUBE
+
+Copyright(c) EC-CUBE CO.,LTD. All Rights Reserved.
+
+http://www.ec-cube.co.jp/
+
+For the full copyright and license information, please view the LICENSE
+file that was distributed with this source code.
+#}
+{% form_theme form 'Form/form_div_layout.twig' %}
+
+<div class="ec-headerSearch">
+    <form method="get" class="searchform" action="{{ path('product_list') }}">
+        <div class="ec-headerSearch__category">
+            <div class="ec-select ec-select_search">
+                {{ form_widget(form.category_id, {'id': null, 'attr': {'class': 'category_id'}}) }}
+            </div>
+        </div>
+        <div class="ec-headerSearch__keyword">
+            <div class="ec-input">
+                {{ form_widget(form.name, {'id': null, 'attr': {'class': 'search-name', 'placeholder' : 'common.search_keyword' }} ) }}
+                <button class="ec-headerSearch__keywordBtn" type="submit">
+                    <div class="ec-icon">
+                        <img src="{{ asset('assets/icon/search-dark.svg') }}" alt="">
+                    </div>
+                </button>
+                <button class="ec-headerSearch__keywordBtn pImgSearch" type="button" style="right: 30px;" title="Image Search">
+                    <div class="ec-icon">
+                        <img style="width: 100%;" src="{{ asset('ImageSearch/assets/camera.svg', 'plugin') }}" alt="">
+                    </div>
+                </button>
+                <input type="file" name="imageSearch" style="display:none;"/>
+            </div>
+        </div>
+    </form>
+</div>
+{% block javascript %}
+{% if isFirstLoad %}
+<script>
+jQuery(document).ready(function () {
+    jQuery('body').append('<div class="modal fade bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" id="imageSearch-modal">\n'+
+'        <div class="modal-dialog modal-lg" role="document">\n'+
+'            <div class="modal-content">\n'+
+'                <div class="modal-header">\n'+
+'                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>\n'+
+'                    <h4 class="modal-title" id="gridSystemModalLabel">Image Search</h4>\n'+
+'                </div>\n'+
+'                <div class="modal-body">\n'+
+'                    <!--Search result-->\n'+
+'                </div>\n'+
+'            </div>\n'+
+'        </div>\n'+
+'    </div><div class="modal fade" id="loadingModal">\n'+
+'    <div style="width: 200px;height:20px; z-index: 20000; position: absolute; text-align: center; left: 50%; top: 50%;margin-left:-100px;margin-top:-10px">\n'+
+'<img src="{{ asset('ImageSearch/assets/loading.gif', 'plugin') }}">\n'+
+'    </div>\n'+
+'</div>')
+    function getFileName(o){
+        var pos=o.lastIndexOf("\\");
+        return o.substring(pos+1);
+    }
+
+    var _extendArray = ['png','jpg']
+    var _fileSizeLimit = 1048576
+
+    jQuery('.ec-headerNaviRole .pImgSearch').click(function () {
+        jQuery(this).siblings("input[name='imageSearch']").trigger('click')
+    })
+    jQuery(".ec-headerNaviRole input[name='imageSearch']").change(function() {
+        jQuery('#imageSearch-modal .modal-body').html('')
+        var _this = jQuery(this)
+        var file = _this.val();
+        if (!file) {
+            return false
+        }
+        var fileName = getFileName(file);
+        var _extend = fileName.substring(fileName.lastIndexOf('.')+1).toLowerCase();
+        var _fileSize = _this[0].files[0].size // 1048576
+        if (_extendArray.indexOf(_extend) == -1) {
+            alert('Please upload pictures in jpg or png format')
+            return false
+        }
+        if (_fileSize > _fileSizeLimit) {
+            alert('Please upload an image smaller than 1MB')
+            return false
+        }
+
+        jQuery("#loadingModal").modal('show');
+
+        var fd = new FormData();
+        fd.append("action", 'upload-image');
+        fd.append("name", fileName);
+        fd.append("upload_image", _this.get(0).files[0]);
+        jQuery.ajax({
+            url: '/imageSearch/upload',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (result) {
+                jQuery("#loadingModal").modal('hide');
+                var _elements = document.getElementsByName('imageSearch')
+                jQuery.each(_elements, function (index, element) {
+                    jQuery(element).val(null)
+                })
+                if (result.status == true) {
+                    var _ids = result.data.join(',')
+                    jQuery.get('/imageSearch/list/' + _ids, function (res) {
+                        jQuery('#imageSearch-modal .modal-body').html(res)
+                        jQuery('#imageSearch-modal').modal('show')
+                    })
+                } else {
+                    alert(result.message)
+                }
+            }
+        })
+    })
+})
+</script>
+{% else %}
+<script>
+    jQuery(document).ready(function () {
+    function getFileName(o){
+        var pos=o.lastIndexOf("\\");
+        return o.substring(pos+1);
+    }
+
+    var _extendArray = ['png','jpg']
+    var _fileSizeLimit = 1048576
+
+    jQuery('.ec-drawerRole .pImgSearch').click(function () {
+        jQuery(this).siblings("input[name='imageSearch']").trigger('click')
+    })
+    jQuery(".ec-drawerRole input[name='imageSearch']").change(function() {
+        jQuery('#imageSearch-modal .modal-body').html('')
+        var _this = jQuery(this)
+        var file = _this.val();
+        if (!file) {
+            return false
+        }
+        var fileName = getFileName(file);
+        var _extend = fileName.substring(fileName.lastIndexOf('.')+1).toLowerCase();
+        var _fileSize = _this[0].files[0].size // 1048576
+        if (_extendArray.indexOf(_extend) == -1) {
+            alert('Please upload pictures in jpg or png format')
+            return false
+        }
+        if (_fileSize > _fileSizeLimit) {
+            alert('Please upload an image smaller than 1MB')
+            return false
+        }
+        jQuery('.ec-drawerRoleClose').trigger('click')
+        jQuery("#loadingModal").modal('show');
+
+        var fd = new FormData();
+        fd.append("action", 'upload-image');
+        fd.append("name", fileName);
+        fd.append("upload_image", _this.get(0).files[0]);
+        jQuery.ajax({
+            url: '/imageSearch/upload',
+            type: 'POST',
+            data: fd,
+            processData: false,
+            contentType: false,
+            success: function (result) {
+                jQuery("#loadingModal").modal('hide');
+                var _elements = document.getElementsByName('imageSearch')
+                jQuery.each(_elements, function (index, element) {
+                    jQuery(element).val(null)
+                })
+                if (result.status == true) {
+                    var _ids = result.data.join(',')
+                    jQuery.get('/imageSearch/list/' + _ids, function (res) {
+                        jQuery('#imageSearch-modal .modal-body').html(res)
+                        jQuery('#imageSearch-modal').modal('show')
+                    })
+                } else {
+                    alert(result.message)
+                }
+            }
+        })
+    })
+})
+</script>
+{% endif %}
+{% endblock %}

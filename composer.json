@@ -1,0 +1,13 @@
+{
+  "name": "ec-cube/ImageSearch",
+  "version": "1.0.0",
+  "description": "ImageSearch",
+  "type": "eccube-plugin",
+  "require": {
+    "ec-cube/plugin-installer": "~0.0.7",
+    "alibabacloud/sdk": "1.8.47"
+  },
+  "extra": {
+    "code": "ImageSearch"
+  }
+}
