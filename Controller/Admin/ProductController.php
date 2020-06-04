@@ -473,16 +473,42 @@ class ProductController extends AbstractController
                     if ($this->Config) {
                         // add image search
                         $filePath = $this->eccubeConfig['eccube_save_image_dir'] . '/' . $add_image;
-                        AlibabaCloud::ImageSearch()
-                            ->V20190325()
-                            ->AddImage()
-                            ->contentType('application/x-www-form-urlencoded; charset=UTF-8')
-                            ->withInstanceName($this->Config->getInstanceName())
-                            ->withProductId($Product->getId())
-                            ->withPicName($add_image)
-                            ->withPicContent(base64_encode(file_get_contents($filePath)))
-                            ->debug(false)
-                            ->request();
+
+                        $maxWidth = 1024;
+                        $maxHeight = 1024;
+                        $imagick = new \Imagick();
+                        $imagick->readImage($filePath);
+                        $orgWidth = $imagick->getImageWidth();
+                        $orgHeight = $imagick->getImageHeight();
+                        if ($orgWidth > $maxWidth || $orgHeight > $maxHeight) {
+                            $ratio = $orgWidth / $orgHeight;
+                            if ($maxWidth / $maxHeight > $ratio) {
+                                $maxWidth = $maxHeight * $ratio;
+                            } else {
+                                $maxHeight = $maxWidth / $ratio;
+                            }
+                            $imagick->scaleImage($maxWidth, $maxHeight);
+                            $imagick->setCompressionQuality(80);
+                            $imagick->writeImage($filePath);
+                        }
+                        $imagick->clear();
+                        $imagick->destroy();
+
+                        try {
+                          AlibabaCloud::ImageSearch()
+                              ->V20190325()
+                              ->AddImage()
+                              ->contentType('application/x-www-form-urlencoded; charset=UTF-8')
+                              ->withInstanceName($this->Config->getInstanceName())
+                              ->withProductId($Product->getId())
+                              ->withPicName($add_image)
+                              ->withPicContent(base64_encode(file_get_contents($filePath)))
+                              ->debug(false)
+                              ->request();
+                        } catch (\Exception $e) {
+                            $this->addError('画像検索の登録が失敗しましたが、商品登録は継続します。', 'admin');
+                            log_warning('画像検索の登録が失敗しましたが、商品登録は継続します。');
+                        }
                         sleep(1);
                     }
                 }
@@ -852,6 +878,7 @@ class ProductController extends AbstractController
                 if ($this->Config && $copyFilenameList) {
                     foreach ($copyFilenameList as $copyFilenameItem) {
                         $filePath = $this->eccubeConfig['eccube_save_image_dir'] . '/' . $copyFilenameItem;
+                        //登録済みの商品をコピする場合、画像圧縮不要
                         AlibabaCloud::ImageSearch()
                             ->V20190325()
                             ->AddImage()

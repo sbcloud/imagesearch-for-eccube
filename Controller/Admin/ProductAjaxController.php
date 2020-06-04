@@ -82,6 +82,27 @@ class ProductAjaxController extends AbstractController
         foreach ($list as $item) {
             $filePath = $this->eccubeConfig['eccube_save_image_dir'] . '/' . $item->getFileName();
             $id = $item->getProduct()->getId();
+
+            $maxWidth = 1024;
+            $maxHeight = 1024;
+            $imagick = new \Imagick();
+            $imagick->readImage($filePath);
+            $orgWidth = $imagick->getImageWidth();
+            $orgHeight = $imagick->getImageHeight();
+            if ($orgWidth > $maxWidth || $orgHeight > $maxHeight) {
+                $ratio = $orgWidth / $orgHeight;
+                if ($maxWidth / $maxHeight > $ratio) {
+                    $maxWidth = $maxHeight * $ratio;
+                } else {
+                    $maxHeight = $maxWidth / $ratio;
+                }
+                $imagick->scaleImage($maxWidth, $maxHeight);
+                $imagick->setCompressionQuality(80);
+                $imagick->writeImage($filePath);
+            }
+            $imagick->clear();
+            $imagick->destroy();
+
             $result = AlibabaCloud::ImageSearch()
                 ->V20190325()
                 ->AddImage()

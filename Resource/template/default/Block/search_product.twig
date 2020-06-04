@@ -62,7 +62,6 @@ jQuery(document).ready(function () {
     }
 
     var _extendArray = ['png','jpg']
-    var _fileSizeLimit = 1048576
 
     jQuery('.ec-headerNaviRole .pImgSearch').click(function () {
         jQuery(this).siblings("input[name='imageSearch']").trigger('click')
@@ -79,10 +78,6 @@ jQuery(document).ready(function () {
         var _fileSize = _this[0].files[0].size // 1048576
         if (_extendArray.indexOf(_extend) == -1) {
             alert('Please upload pictures in jpg or png format')
-            return false
-        }
-        if (_fileSize > _fileSizeLimit) {
-            alert('Please upload an image smaller than 1MB')
             return false
         }
 
@@ -127,7 +122,6 @@ jQuery(document).ready(function () {
     }
 
     var _extendArray = ['png','jpg']
-    var _fileSizeLimit = 1048576
 
     jQuery('.ec-drawerRole .pImgSearch').click(function () {
         jQuery(this).siblings("input[name='imageSearch']").trigger('click')
@@ -144,10 +138,6 @@ jQuery(document).ready(function () {
         var _fileSize = _this[0].files[0].size // 1048576
         if (_extendArray.indexOf(_extend) == -1) {
             alert('Please upload pictures in jpg or png format')
-            return false
-        }
-        if (_fileSize > _fileSizeLimit) {
-            alert('Please upload an image smaller than 1MB')
             return false
         }
         jQuery('.ec-drawerRoleClose').trigger('click')
