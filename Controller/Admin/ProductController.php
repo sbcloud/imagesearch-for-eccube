@@ -473,6 +473,27 @@ class ProductController extends AbstractController
                     if ($this->Config) {
                         // add image search
                         $filePath = $this->eccubeConfig['eccube_save_image_dir'] . '/' . $add_image;
+
+                        $maxWidth = 1024;
+                        $maxHeight = 1024;
+                        $imagick = new \Imagick();
+                        $imagick->readImage($filePath);
+                        $orgWidth = $imagick->getImageWidth();
+                        $orgHeight = $imagick->getImageHeight();
+                        if ($orgWidth > $maxWidth || $orgHeight > $maxHeight) {
+                            $ratio = $orgWidth / $orgHeight;
+                            if ($maxWidth / $maxHeight > $ratio) {
+                                $maxWidth = $maxHeight * $ratio;
+                            } else {
+                                $maxHeight = $maxWidth / $ratio;
+                            }
+                            $imagick->scaleImage($maxWidth, $maxHeight);
+                            $imagick->setCompressionQuality(80);
+                            $imagick->writeImage($filePath);
+                        }
+                        $imagick->clear();
+                        $imagick->destroy();
+
                         AlibabaCloud::ImageSearch()
                             ->V20190325()
                             ->AddImage()
@@ -852,6 +873,7 @@ class ProductController extends AbstractController
                 if ($this->Config && $copyFilenameList) {
                     foreach ($copyFilenameList as $copyFilenameItem) {
                         $filePath = $this->eccubeConfig['eccube_save_image_dir'] . '/' . $copyFilenameItem;
+                        //登録済みの商品をコピする場合、画像圧縮不要
                         AlibabaCloud::ImageSearch()
                             ->V20190325()
                             ->AddImage()

@@ -370,6 +370,27 @@ class CsvImportController extends AbstractCsvImportController
                         // call image search
                         foreach ($this->pImages as $pImage) {
                             $pFilePath = $this->eccubeConfig['eccube_save_image_dir'] . '/' . $pImage;
+
+                            $maxWidth = 1024;
+                            $maxHeight = 1024;
+                            $imagick = new \Imagick();
+                            $imagick->readImage($pFilePath);
+                            $orgWidth = $imagick->getImageWidth();
+                            $orgHeight = $imagick->getImageHeight();
+                            if ($orgWidth > $maxWidth || $orgHeight > $maxHeight) {
+                                $ratio = $orgWidth / $orgHeight;
+                                if ($maxWidth / $maxHeight > $ratio) {
+                                    $maxWidth = $maxHeight * $ratio;
+                                } else {
+                                    $maxHeight = $maxWidth / $ratio;
+                                }
+                                $imagick->scaleImage($maxWidth, $maxHeight);
+                                $imagick->setCompressionQuality(80);
+                                $imagick->writeImage($pFilePath);
+                            }
+                            $imagick->clear();
+                            $imagick->destroy();
+
                             AlibabaCloud::ImageSearch()
                                 ->V20190325()
                                 ->AddImage()

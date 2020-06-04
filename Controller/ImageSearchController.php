@@ -97,6 +97,27 @@ class ImageSearchController extends AbstractController
                 'message' => 'Please upload pictures in jpg or png format',
             ]);
         }
+
+        $maxWidth = 1024;
+        $maxHeight = 1024;
+        $imagick = new \Imagick();
+        $imagick->readImage($_FILES['upload_image']['tmp_name']);
+        $orgWidth = $imagick->getImageWidth();
+        $orgHeight = $imagick->getImageHeight();
+        if ($orgWidth > $maxWidth || $orgHeight > $maxHeight) {
+            $ratio = $orgWidth / $orgHeight;
+            if ($maxWidth / $maxHeight > $ratio) {
+                $maxWidth = $maxHeight * $ratio;
+            } else {
+                $maxHeight = $maxWidth / $ratio;
+            }
+            $imagick->scaleImage($maxWidth, $maxHeight);
+            $imagick->setCompressionQuality(80);
+            $imagick->writeImage($_FILES['upload_image']['tmp_name']);
+        }
+        $imagick->clear();
+        $imagick->destroy();
+
         if ($_FILES['upload_image']['size'] > 1048576) {
             return $this->json(['status' => false, 'message' => 'Please upload an image smaller than 1MB']);
         }
