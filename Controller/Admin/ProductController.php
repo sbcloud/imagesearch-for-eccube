@@ -494,16 +494,21 @@ class ProductController extends AbstractController
                         $imagick->clear();
                         $imagick->destroy();
 
-                        AlibabaCloud::ImageSearch()
-                            ->V20190325()
-                            ->AddImage()
-                            ->contentType('application/x-www-form-urlencoded; charset=UTF-8')
-                            ->withInstanceName($this->Config->getInstanceName())
-                            ->withProductId($Product->getId())
-                            ->withPicName($add_image)
-                            ->withPicContent(base64_encode(file_get_contents($filePath)))
-                            ->debug(false)
-                            ->request();
+                        try {
+                          AlibabaCloud::ImageSearch()
+                              ->V20190325()
+                              ->AddImage()
+                              ->contentType('application/x-www-form-urlencoded; charset=UTF-8')
+                              ->withInstanceName($this->Config->getInstanceName())
+                              ->withProductId($Product->getId())
+                              ->withPicName($add_image)
+                              ->withPicContent(base64_encode(file_get_contents($filePath)))
+                              ->debug(false)
+                              ->request();
+                        } catch (\Exception $e) {
+                            $this->addError('画像検索の登録が失敗しましたが、商品登録は継続します。', 'admin');
+                            log_warning('画像検索の登録が失敗しましたが、商品登録は継続します。');
+                        }
                         sleep(1);
                     }
                 }
